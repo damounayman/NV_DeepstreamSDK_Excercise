@@ -278,7 +278,7 @@ int main (int argc, char *argv[])
     g_object_set (G_OBJECT (encoder), "bufapi-version", 1, NULL);
 
     /* Filesink setting */
-    g_object_set (G_OBJECT (sink), "location", "/workspace/out.mp4", NULL);
+    g_object_set (G_OBJECT (sink), "location", "./out.mp4", NULL);
 
 
     /* 4. Set up the pipeline */
