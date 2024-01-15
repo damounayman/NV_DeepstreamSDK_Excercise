@@ -77,19 +77,19 @@ parse_objects_from_tensor_meta(NvDsInferTensorMeta *tensor_meta)
 {
     Vec1D<int> counts;
     Vec3D<int> peaks;
-    
+
     float threshold = 0.1;
     int window_size = 5;
     int max_num_parts = 2;
     int num_integral_samples = 7;
     float link_threshold = 0.1;
     int max_num_objects = 100;
-    
+
     void *cmap_data = tensor_meta->out_buf_ptrs_host[0];
     NvDsInferDims &cmap_dims = tensor_meta->output_layers_info[0].inferDims;
     void *paf_data = tensor_meta->out_buf_ptrs_host[1];
     NvDsInferDims &paf_dims = tensor_meta->output_layers_info[1].inferDims;
-    
+
     /* Finding peaks within a given window */
     find_peaks(counts, peaks, cmap_data, cmap_dims, threshold, window_size, max_num_parts);
     /* Non-Maximum Suppression */
@@ -112,7 +112,7 @@ create_display_meta(Vec2D<int> &objects, Vec3D<float> &normalized_peaks, NvDsFra
     NvDsBatchMeta *bmeta = frame_meta->base_meta.batch_meta;
     NvDsDisplayMeta *dmeta = nvds_acquire_display_meta_from_pool(bmeta);
     nvds_add_display_meta_to_frame(frame_meta, dmeta);
-    
+
     for (auto &object : objects)
     {
         int C = object.size();
@@ -139,7 +139,7 @@ create_display_meta(Vec2D<int> &objects, Vec3D<float> &normalized_peaks, NvDsFra
                 dmeta->num_circles++;
             }
         }
-      
+
         for (int k = 0; k < K; k++)
         {
             int c_a = topology[k][2];
@@ -181,12 +181,12 @@ pgie_src_pad_buffer_probe(GstPad *pad, GstPadProbeInfo *info, gpointer u_data)
     NvDsMetaList *l_obj = NULL;
     NvDsMetaList *l_user = NULL;
     NvDsBatchMeta *batch_meta = gst_buffer_get_nvds_batch_meta(buf);
-  
+
     for (l_frame = batch_meta->frame_meta_list; l_frame != NULL;
          l_frame = l_frame->next)
     {
         NvDsFrameMeta *frame_meta = (NvDsFrameMeta *)(l_frame->data);
-  
+
         for (l_user = frame_meta->frame_user_meta_list; l_user != NULL;
              l_user = l_user->next)
         {
@@ -201,7 +201,7 @@ pgie_src_pad_buffer_probe(GstPad *pad, GstPadProbeInfo *info, gpointer u_data)
                 create_display_meta(objects, normalized_peaks, frame_meta, frame_meta->source_frame_width, frame_meta->source_frame_height);
             }
         }
-  
+
         for (l_obj = frame_meta->obj_meta_list; l_obj != NULL;
              l_obj = l_obj->next)
         {
@@ -236,14 +236,14 @@ osd_sink_pad_buffer_probe(GstPad *pad, GstPadProbeInfo *info, gpointer u_data)
     NvDsMetaList *l_frame = NULL;
     NvDsMetaList *l_obj = NULL;
     NvDsDisplayMeta *display_meta = NULL;
-  
+
     NvDsBatchMeta *batch_meta = gst_buffer_get_nvds_batch_meta(buf);
-  
+
     gint perf_interval = 100;
     if( frame_number % perf_interval == 0 ){
         perf_fps(perf_interval);
     }
-  
+
     for (l_frame = batch_meta->frame_meta_list; l_frame != NULL;
          l_frame = l_frame->next)
     {
@@ -254,29 +254,29 @@ osd_sink_pad_buffer_probe(GstPad *pad, GstPadProbeInfo *info, gpointer u_data)
             obj_meta = (NvDsObjectMeta *)(l_obj->data);
         }
         display_meta = nvds_acquire_display_meta_from_pool(batch_meta);
-  
+
         /* Parameters to draw text onto the On-Screen-Display */
         NvOSD_TextParams *txt_params = &display_meta->text_params[0];
         display_meta->num_labels = 1;
         txt_params->display_text = (char *)g_malloc0(MAX_DISPLAY_LEN);
         offset = snprintf(txt_params->display_text, MAX_DISPLAY_LEN, "FPS =  %0.1f", fps_val);
-  
+
         txt_params->x_offset = 10;
         txt_params->y_offset = 12;
-  
+
         txt_params->font_params.font_name = "Mono";
         txt_params->font_params.font_size = 10;
         txt_params->font_params.font_color.red = 1.0;
         txt_params->font_params.font_color.green = 1.0;
         txt_params->font_params.font_color.blue = 1.0;
         txt_params->font_params.font_color.alpha = 1.0;
-  
+
         txt_params->set_bg_clr = 1;
         txt_params->text_bg_clr.red = 0.0;
         txt_params->text_bg_clr.green = 0.0;
         txt_params->text_bg_clr.blue = 0.0;
         txt_params->text_bg_clr.alpha = 1.0;
-  
+
         nvds_add_display_meta_to_frame(frame_meta, display_meta);
     }
     frame_number++;
@@ -292,7 +292,7 @@ bus_call(GstBus *bus, GstMessage *msg, gpointer data)
         g_print("End of Stream\n");
         g_main_loop_quit(loop);
         break;
-  
+
     case GST_MESSAGE_ERROR:
         gchar *debug;
         GError *error;
@@ -332,11 +332,11 @@ int main(int argc, char *argv[])
       g_printerr("Usage: %s <webcam device>\n", argv[0]);
       return -1;
     }
-    
+
     /* 1. Standard GStreamer initialization */
     gst_init(&argc, &argv);
     loop = g_main_loop_new(NULL, FALSE);
-    
+
     /* 2. Create gstreamer elements */
     /* Create Pipeline element that will form a connection of other elements */
     pipeline = gst_pipeline_new("deepstream-tensorrt-openpose-pipeline");
@@ -345,31 +345,31 @@ int main(int argc, char *argv[])
     source = gst_element_factory_make ("v4l2src", "usb-camera");
     /* capsfilter for v4l2src */
     caps_v4l2src = gst_element_factory_make("capsfilter", "v4l2src_caps");
-    
+
     /* nvvideoconvert element to convert incoming raw buffers to NVMM Mem (NvBufSurface API) */
     vidconv_src = gst_element_factory_make ("nvvideoconvert", "vidconv_src");
     /* capsfilter for nvvidconv_src */
     caps_vidconv_src = gst_element_factory_make ("capsfilter", "nvmm_caps");
-    
+
     /* Create nvstreammux instance to form batches from one or more sources. */
     streammux = gst_element_factory_make("nvstreammux", "stream-muxer");
-    
+
     /* Check elements are created properly */
     if (!pipeline || !source || !caps_v4l2src || !vidconv_src || !caps_vidconv_src) {
         g_printerr ("One element could not be created. Exiting.\n");
         return -1;
     }
-    
+
     /* Use nvinfer to run inferencing on decoder's output,
      * behaviour of inferencing is set through config file */
     pgie = gst_element_factory_make("nvinfer", "primary-nvinference-engine");
-    
+
     /* Use convertor to convert from NV12 to RGBA as required by nvosd */
     nvvidconv = gst_element_factory_make("nvvideoconvert", "nvvideo-converter");
-    
+
     /* Create OSD to draw on the converted RGBA buffer */
     nvosd = gst_element_factory_make("nvdsosd", "nv-onscreendisplay");
-    
+
     /* Finally render the osd output */
 #ifdef PLATFORM_TEGRA
     transform = gst_element_factory_make("nvegltransform", "nvegl-transform");
@@ -410,13 +410,13 @@ int main(int argc, char *argv[])
     g_object_set(G_OBJECT(pgie), "output-tensor-meta", TRUE,
                  "config-file-path", "config/deepstream_pose_estimation_config.txt", NULL);
     g_object_set(G_OBJECT(sink), "sync", 0, NULL);
-  
+
     /* 4. Set up the pipeline */
     /* Add a message handler */
     bus = gst_pipeline_get_bus(GST_PIPELINE(pipeline));
     bus_watch_id = gst_bus_add_watch(bus, bus_call, loop);
     gst_object_unref(bus);
-  
+
     /* Add all elements into the pipeline */
 #ifdef PLATFORM_TEGRA
     gst_bin_add_many(GST_BIN(pipeline),
@@ -437,19 +437,19 @@ int main(int argc, char *argv[])
     GstPad *sinkpad, *srcpad;
     gchar pad_name_sink[16] = "sink_0";
     gchar pad_name_src[16] = "src";
-    sinkpad = gst_element_get_request_pad (streammux, pad_name_sink);
-     
+    sinkpad = gst_element_request_pad_simple (streammux, pad_name_sink);
+
     if (!sinkpad) {
         g_printerr ("Streammux request sink pad failed. Exiting.\n");
         return -1;
     }
-    
+
     srcpad = gst_element_get_static_pad (caps_vidconv_src, pad_name_src);
     if (!srcpad) {
         g_printerr ("Decoder request src pad failed. Exiting.\n");
         return -1;
     }
-    
+
     if (gst_pad_link (srcpad, sinkpad) != GST_PAD_LINK_OK) {
         g_printerr ("Failed to link decoder to stream muxer. Exiting.\n");
         return -1;
@@ -479,7 +479,7 @@ int main(int argc, char *argv[])
     else
         gst_pad_add_probe(pgie_src_pad, GST_PAD_PROBE_TYPE_BUFFER,
                         pgie_src_pad_buffer_probe, (gpointer)sink, NULL);
-  
+
     /* Lets add probe to get informed of the meta data generated, we add probe to
      * the sink pad of the osd element, since by that time, the buffer would have
      * had got all the metadata. */
@@ -489,15 +489,15 @@ int main(int argc, char *argv[])
     else
         gst_pad_add_probe(osd_sink_pad, GST_PAD_PROBE_TYPE_BUFFER,
                         osd_sink_pad_buffer_probe, (gpointer)sink, NULL);
-  
+
     /* Set the pipeline to "playing" state */
     g_print("Now playing: %s\n", argv[1]);
     gst_element_set_state(pipeline, GST_STATE_PLAYING);
-  
+
     /* Wait till pipeline encounters an error or EOS */
     g_print("Running...\n");
     g_main_loop_run(loop);
-  
+
     /* Out of the main loop, clean up nicely */
     g_print("Returned, stopping playback\n");
     gst_element_set_state(pipeline, GST_STATE_NULL);

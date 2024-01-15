@@ -29,7 +29,7 @@ Compilation Steps:
   $ ./test_ds_input_uri <uri1> [uri2] ... [uriN]
   ex) $ ./test_ds_input_uri file:///opt/nvidia/deepstream/deepstream/samples/streams/sample_720p.h264 file:///opt/nvidia/deepstream/deepstream/samples/streams/sample_qHD.h264
 
-This document shall describe about the sample deepstream application that 
+This document shall describe about the sample deepstream application that
 You can understand how to implement gstreamer pipeline with deepstream SDK.
 
 It is meant for simple demonstration of how to use the various DeepStream SDK

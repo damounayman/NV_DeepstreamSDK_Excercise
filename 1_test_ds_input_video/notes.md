@@ -2,6 +2,7 @@
 # GStreamer and DeepStream Function Summary of this example.
 
 This program sets up a GStreamer pipeline to decode and render an H.264 video file using NVIDIA DeepStream elements.
+Pipeline : filesrc -> h264parse -> nvv4l2decoder -> nvstreammux -> nvegltransform -> nveglglessink
 
 ## GStreamer Initialization and Main Loop
 
@@ -39,7 +40,7 @@ This program sets up a GStreamer pipeline to decode and render an H.264 video fi
 
 ### Link Elements
 - `gst_element_link_many(source, h264parser, decoder, NULL);`: Links source, H.264 parser, and decoder elements.
-- `gst_element_get_request_pad(streammux, pad_name_sink);`: Gets the sink pad of the stream multiplexer.
+- `gst_element_request_pad_simple(streammux, pad_name_sink);`: Gets the sink pad of the stream multiplexer.
 - `gst_element_get_static_pad(decoder, pad_name_src);`: Gets the source pad of the decoder.
 - `gst_pad_link(srcpad, sinkpad) != GST_PAD_LINK_OK;`: Links the source pad of the decoder to the sink pad of the stream multiplexer.
 - `gst_element_link_many(streammux, transform, sink, NULL);`: Links the remaining elements in the pipeline (Tegra-specific).
