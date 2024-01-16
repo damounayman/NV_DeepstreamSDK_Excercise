@@ -1102,7 +1102,7 @@ create_pipeline (AppCtx * appCtx,
       gst_bin_add (GST_BIN (pipeline->pipeline),
           pipeline->demux_instance_bins[i].bin);
 
-      demux_src_pad = gst_element_get_request_pad (pipeline->demuxer, pad_name);
+      demux_src_pad = gst_element_request_pad_simple (pipeline->demuxer, pad_name);
       NVGSTDS_LINK_ELEMENT_FULL (pipeline->demuxer, pad_name,
           pipeline->demux_instance_bins[i].bin, "sink");
       gst_object_unref (demux_src_pad);
@@ -1196,7 +1196,7 @@ create_pipeline (AppCtx * appCtx,
                   pipeline->instance_bins[i].bin);
 
       g_snprintf(pad_name, 16, "src_%02d", i);
-      demux_src_pad = gst_element_get_request_pad(pipeline->demuxer, pad_name);
+      demux_src_pad = gst_element_request_pad_simple(pipeline->demuxer, pad_name);
       NVGSTDS_LINK_ELEMENT_FULL(pipeline->demuxer, pad_name,
                                 pipeline->instance_bins[i].bin, "sink");
       gst_object_unref(demux_src_pad);

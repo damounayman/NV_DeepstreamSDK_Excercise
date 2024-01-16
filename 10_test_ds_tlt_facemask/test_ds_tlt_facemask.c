@@ -84,7 +84,7 @@ static GstPadProbeReturn osd_sink_pad_buffer_probe (GstPad * pad, GstPadProbeInf
 
     for (l_frame = batch_meta->frame_meta_list; l_frame != NULL; l_frame = l_frame->next) {
         NvDsFrameMeta *frame_meta = (NvDsFrameMeta *) (l_frame->data);
-        
+
         if (frame_meta == NULL) {
             g_print ("NvDS Meta contained NULL meta \n");
             return GST_PAD_PROBE_OK;
@@ -96,13 +96,13 @@ static GstPadProbeReturn osd_sink_pad_buffer_probe (GstPad * pad, GstPadProbeInf
             g_print("%s\n", bbox_file);
             bbox_params_dump_file = fopen (bbox_file, "a");
         }
-  
+
         for (l_obj = frame_meta->obj_meta_list; l_obj != NULL; l_obj = l_obj->next) {
             obj_meta = (NvDsObjectMeta *) (l_obj->data);
-  
+
             NvOSD_RectParams * rect_params = &(obj_meta->rect_params);
             NvOSD_TextParams * text_params = &(obj_meta->text_params);
-  
+
             if (text_params->display_text) {
                 text_params->font_params.font_size = 24;
                 text_params->set_bg_clr = 1;
@@ -113,7 +113,7 @@ static GstPadProbeReturn osd_sink_pad_buffer_probe (GstPad * pad, GstPadProbeInf
                 text_params->x_offset = rect_params->left;
                 text_params->y_offset = rect_params->top;
             }
-  
+
             /* Draw black patch to cover license plates (class_id = 1) */
             if (obj_meta->class_id == 1) {
                 rect_params->border_width = 3;
@@ -142,12 +142,12 @@ static GstPadProbeReturn osd_sink_pad_buffer_probe (GstPad * pad, GstPadProbeInf
                 rect_params->border_color.alpha = 0.8;
                 text_params->text_bg_clr.green = 1.0;
             }
-        }  
+        }
         if (bbox_params_dump_file) {
             g_print("3\n");
             fclose (bbox_params_dump_file);
             bbox_params_dump_file = NULL;
-        } 
+        }
     }
     return GST_PAD_PROBE_OK;
 }
@@ -281,7 +281,7 @@ int main (int argc, char *argv[]) {
         source = gst_element_factory_make ("v4l2src", "usb-camera");
         /* capsfilter for v4l2src */
         caps_v4l2src = gst_element_factory_make("capsfilter", "v4l2src_caps");
-        
+
         /* nvvideoconvert element to convert incoming raw buffers to NVMM Mem (NvBufSurface API) */
         vidconv_src = gst_element_factory_make ("nvvideoconvert", "vidconv_src");
         /* capsfilter for nvvidconv_src */
@@ -439,26 +439,26 @@ int main (int argc, char *argv[]) {
             GstPad *sinkpad, *srcpad;
             gchar pad_name_sink[16] = {};
             gchar pad_name_src[16] = {};
-        
+
             g_snprintf (pad_name_sink, 15, "sink_%u", i);
             g_snprintf (pad_name_src, 15, "src_%u", i);
-            sinkpad = gst_element_get_request_pad (streammux, pad_name_sink);
+            sinkpad = gst_element_request_pad_simple (streammux, pad_name_sink);
             if (!sinkpad) {
                 g_printerr ("Streammux request sink pad failed. Exiting.\n");
                 return -1;
             }
-        
-            srcpad = gst_element_get_request_pad(tee, pad_name_src);
+
+            srcpad = gst_element_request_pad_simple(tee, pad_name_src);
             if (!srcpad) {
                 g_printerr ("tee request src pad failed. Exiting.\n");
                 return -1;
             }
-        
+
             if (gst_pad_link (srcpad, sinkpad) != GST_PAD_LINK_OK) {
                 g_printerr ("Failed to link tee to stream muxer. Exiting.\n");
                 return -1;
             }
-        
+
             gst_object_unref (sinkpad);
             gst_object_unref (srcpad);
         }
@@ -473,19 +473,19 @@ int main (int argc, char *argv[]) {
         GstPad *sinkpad, *srcpad;
         gchar pad_name_sink[16] = "sink_0";
         gchar pad_name_src[16] = "src";
-        sinkpad = gst_element_get_request_pad (streammux, pad_name_sink);
-         
+        sinkpad = gst_element_request_pad_simple (streammux, pad_name_sink);
+
         if (!sinkpad) {
             g_printerr ("Streammux request sink pad failed. Exiting.\n");
             return -1;
         }
-        
+
         srcpad = gst_element_get_static_pad (caps_vidconv_src, pad_name_src);
         if (!srcpad) {
             g_printerr ("Decoder request src pad failed. Exiting.\n");
             return -1;
         }
-        
+
         if (gst_pad_link (srcpad, sinkpad) != GST_PAD_LINK_OK) {
             g_printerr ("Failed to link decoder to stream muxer. Exiting.\n");
             return -1;

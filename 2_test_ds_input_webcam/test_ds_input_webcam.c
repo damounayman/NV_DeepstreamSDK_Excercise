@@ -76,7 +76,7 @@ int main (int argc, char *argv[])
     GstCaps *caps = NULL;
     GstBus *bus = NULL;
     guint bus_watch_id;
-    
+
     /* Check input arguments */
     if (argc != 2) {
         g_printerr ("Usage: %s <v4l2-device-path>\n", argv[0]);
@@ -86,24 +86,24 @@ int main (int argc, char *argv[])
     /* 1. Standard GStreamer initialization */
     gst_init (&argc, &argv);
     loop = g_main_loop_new (NULL, FALSE);
-    
+
     /* 2. Create gstreamer elements */
     /* Create Pipeline element that will form a connection of other elements */
     pipeline = gst_pipeline_new ("dstest-input-webcam");
-    
+
     /* Source element for capturing from usb-camera */
     source = gst_element_factory_make ("v4l2src", "usb-camera");
     /* capsfilter for v4l2src */
     caps_v4l2src = gst_element_factory_make("capsfilter", "v4l2src_caps");
-    
+
     /* nvvideoconvert element to convert incoming raw buffers to NVMM Mem (NvBufSurface API) */
     vidconv_src = gst_element_factory_make ("nvvideoconvert", "vidconv_src");
     /* capsfilter for nvvidconv_src */
     caps_vidconv_src = gst_element_factory_make ("capsfilter", "nvmm_caps");
-    
+
     /* Create nvstreammux instance to form batches from one or more sources */
     streammux = gst_element_factory_make ("nvstreammux", "stream-muxer");
-    
+
     /* Check elements are created properly */
     if (!pipeline || !source || !caps_v4l2src || !vidconv_src || !caps_vidconv_src) {
         g_printerr ("One element could not be created. Exiting.\n");
@@ -141,13 +141,13 @@ int main (int argc, char *argv[])
         "batch-size", 1, "batched-push-timeout", MUXER_BATCH_TIMEOUT_USEC, NULL);
     /* Renderer setting */
     g_object_set (G_OBJECT (sink), "sync", 0, NULL);
-    
+
     /* 4. Set up the pipeline */
     /* Add a message handler */
     bus = gst_pipeline_get_bus (GST_PIPELINE (pipeline));
     bus_watch_id = gst_bus_add_watch (bus, bus_call, loop);
     gst_object_unref (bus);
-    
+
     /* Add all elements into the pipeline */
 #ifdef PLATFORM_TEGRA
     gst_bin_add_many (GST_BIN (pipeline),
@@ -168,19 +168,19 @@ int main (int argc, char *argv[])
     GstPad *sinkpad, *srcpad;
     gchar pad_name_sink[16] = "sink_0";
     gchar pad_name_src[16] = "src";
-    sinkpad = gst_element_get_request_pad (streammux, pad_name_sink);
-     
+    sinkpad = gst_element_request_pad_simple (streammux, pad_name_sink);
+
     if (!sinkpad) {
         g_printerr ("Streammux request sink pad failed. Exiting.\n");
         return -1;
     }
-    
+
     srcpad = gst_element_get_static_pad (caps_vidconv_src, pad_name_src);
     if (!srcpad) {
         g_printerr ("Decoder request src pad failed. Exiting.\n");
         return -1;
     }
-    
+
     if (gst_pad_link (srcpad, sinkpad) != GST_PAD_LINK_OK) {
         g_printerr ("Failed to link decoder to stream muxer. Exiting.\n");
         return -1;
@@ -188,7 +188,7 @@ int main (int argc, char *argv[])
     gst_object_unref (sinkpad);
     gst_object_unref (srcpad);
 
-  
+
     /* Link streammux -> video-render */
 #ifdef PLATFORM_TEGRA
     if (!gst_element_link_many (streammux, transform, sink, NULL)) {
@@ -205,11 +205,11 @@ int main (int argc, char *argv[])
     /* Set the pipeline to "playing" state */
     g_print ("Now playing: %s\n", argv[1]);
     gst_element_set_state (pipeline, GST_STATE_PLAYING);
-    
+
     /* Wait till pipeline encounters an error or EOS */
     g_print ("Running...\n");
     g_main_loop_run (loop);
-    
+
     /* Out of the main loop, clean up nicely */
     g_print ("Returned, stopping playback\n");
     gst_element_set_state (pipeline, GST_STATE_NULL);
