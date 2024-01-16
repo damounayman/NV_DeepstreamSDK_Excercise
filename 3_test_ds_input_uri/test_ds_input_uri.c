@@ -83,7 +83,7 @@ cb_newpad (GstElement * decodebin, GstPad * decoder_src_pad, gpointer data)
     const gchar *name = gst_structure_get_name (str);
     GstElement *source_bin = (GstElement *) data;
     GstCapsFeatures *features = gst_caps_get_features (caps, 0);
-    
+
     /* Need to check if the pad created by the decodebin is for video and not audio. */
     if (!strncmp (name, "video", 5)) {
         /* Link the decodebin pad only if decodebin has picked nvidia
@@ -121,31 +121,31 @@ create_source_bin (guint index, gchar * uri)
 {
     GstElement *bin = NULL, *uri_decode_bin = NULL;
     gchar bin_name[16] = { };
-    
+
     g_snprintf (bin_name, 15, "source-bin-%02d", index);
     /* Create a source GstBin to abstract this bin's content from the rest of the pipeline */
     bin = gst_bin_new (bin_name);
-    
+
     /* Source element for reading from the uri.
-     * We will use decodebin and let it figure out the container format of the stream 
+     * We will use decodebin and let it figure out the container format of the stream
      * and the codec and plug the appropriate demux and decode plugins. */
     uri_decode_bin = gst_element_factory_make ("uridecodebin", "uri-decode-bin");
-    
+
     if(!bin || !uri_decode_bin) {
         g_printerr ("One element in source bin could not be created.\n");
         return NULL;
     }
-    
+
     /* We set the input uri to the source element */
     g_object_set (G_OBJECT (uri_decode_bin), "uri", uri, NULL);
-    
+
     /* Connect to the "pad-added" signal of the decodebin which generates a
      * callback once a new pad for raw data has beed created by the decodebin */
     g_signal_connect (G_OBJECT (uri_decode_bin), "pad-added", G_CALLBACK (cb_newpad), bin);
     g_signal_connect (G_OBJECT (uri_decode_bin), "child-added", G_CALLBACK (decodebin_child_added), bin);
-    
+
     gst_bin_add (GST_BIN (bin), uri_decode_bin);
-    
+
     /* We need to create a ghost pad for the source bin which will act as a proxy
      * for the video decoder src pad. The ghost pad will not have a target right
      * now. Once the decode bin creates the video decoder and generates the
@@ -156,7 +156,7 @@ create_source_bin (guint index, gchar * uri)
         g_printerr ("Failed to add ghost pad in source bin\n");
         return NULL;
     }
-    
+
     return bin;
 }
 
@@ -173,14 +173,14 @@ int main (int argc, char *argv[])
     GstPad *tiler_src_pad = NULL;
     guint i, num_sources;
     guint tiler_rows, tiler_columns;
-    
+
     /* Check input arguments */
     if (argc < 2) {
         g_printerr ("Usage: %s <uri1> [uri2] ... [uriN] \n", argv[0]);
         return -1;
     }
     num_sources = argc - 1;
-    
+
     /* 1. Standard GStreamer initialization */
     gst_init (&argc, &argv);
     loop = g_main_loop_new (NULL, FALSE);
@@ -208,27 +208,27 @@ int main (int argc, char *argv[])
             g_printerr ("Failed to create source bin. Exiting.\n");
             return -1;
         }
-        
+
         gst_bin_add (GST_BIN (pipeline), source_bin);
-        
+
         g_snprintf (pad_name, 15, "sink_%u", i);
-        sinkpad = gst_element_get_request_pad (streammux, pad_name);
+        sinkpad = gst_element_request_pad_simple (streammux, pad_name);
         if (!sinkpad) {
             g_printerr ("Streammux request sink pad failed. Exiting.\n");
             return -1;
         }
-        
+
         srcpad = gst_element_get_static_pad (source_bin, "src");
         if (!srcpad) {
             g_printerr ("Failed to get src pad of source bin. Exiting.\n");
             return -1;
         }
-        
+
         if (gst_pad_link (srcpad, sinkpad) != GST_PAD_LINK_OK) {
             g_printerr ("Failed to link source bin to stream muxer. Exiting.\n");
             return -1;
         }
-        
+
         gst_object_unref (srcpad);
         gst_object_unref (sinkpad);
     }
@@ -265,16 +265,16 @@ int main (int argc, char *argv[])
     tiler_rows = (guint) sqrt (num_sources);
     tiler_columns = (guint) ceil (1.0 * num_sources / tiler_rows);
     g_object_set (G_OBJECT (tiler), "rows", tiler_rows, "columns", tiler_columns,
-        "width", TILED_OUTPUT_WIDTH, "height", TILED_OUTPUT_HEIGHT, 
+        "width", TILED_OUTPUT_WIDTH, "height", TILED_OUTPUT_HEIGHT,
         "nvbuf-memory-type", 0, NULL);
     g_object_set (G_OBJECT (sink),"async",0, "sync", 1, "qos", 0, NULL);
-    
+
     /* 4. Set up the pipeline */
     /* Add a message handler */
     bus = gst_pipeline_get_bus (GST_PIPELINE (pipeline));
     bus_watch_id = gst_bus_add_watch (bus, bus_call, loop);
     gst_object_unref (bus);
-    
+
     /* Add all elements into the pipeline & Link the elements together */
 #ifdef PLATFORM_TEGRA
     gst_bin_add_many (GST_BIN (pipeline), tiler, transform, sink, NULL);
@@ -297,11 +297,11 @@ int main (int argc, char *argv[])
     }
     g_print ("\n");
     gst_element_set_state (pipeline, GST_STATE_PLAYING);
-    
+
     /* Wait till pipeline encounters an error or EOS */
     g_print ("Running...\n");
     g_main_loop_run (loop);
-    
+
     /* Out of the main loop, clean up nicely */
     g_print ("Returned, stopping playback\n");
     gst_element_set_state (pipeline, GST_STATE_NULL);

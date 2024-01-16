@@ -5,18 +5,18 @@ Specially, this hands-on is working with Jetson Series but prepared docker conta
 with custom configurations.
 
 ## Prerequisites
-### 1. Host machine 
+### 1. Host machine
   - SSH terminal
   - VLC player
   - (For TLT exercise) GPU machine is required & docker runtime environment
     - $ docker run --gpus all -it -v $(pwd):/workspace –w /usr/local/src -p 8888:8888 cycoslee/nv-deepstreamsdk-handson:tlt_host_210127
 ### 2. Jetson NX (based on Jetpack 4.4.1)
   - docker container pull
-    - $ sudo docker run -ti --runtime=nvidia --rm --net=host -e DISPLAY=$DISPLAY -w /opt/nvidia/deepstream/deepstream-5.0 --device /dev/video0 -v /tmp/.X11-unix/:/tmp/.X11-unix -v $(pwd):/workspace cycoslee/nv-deepstreamsdk-handson:ds_nx_210127
+    - $ sudo docker run -ti --runtime=nvidia --rm --net=host -e DISPLAY=$DISPLAY -w /opt/nvidia/deepstream/deepstream-6.4 --device /dev/video0 -v /tmp/.X11-unix/:/tmp/.X11-unix -v $(pwd):/workspace cycoslee/nv-deepstreamsdk-handson:ds_nx_210127
   - Assets
     - IP camera(supports RTSP)
     - USB camera(webcam)
-    
+
 ## Exmaples
 (Please check README file in the every each examples.)
   - 1_test_ds_input_video
@@ -29,4 +29,4 @@ with custom configurations.
   - 8_test_ds_pose_estimation
   - 9_test_ds_yolov4
   - 10_test_ds_tlt_facemask
-  
+
