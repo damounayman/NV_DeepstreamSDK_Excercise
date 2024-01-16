@@ -29,6 +29,9 @@ Additionally, Here are the version dependencies:
     - PyTorch
     - onnxruntime
 
+Need to install
+sudo apt install libjson-glib-dev
+
 
 Compilation Steps:
   $ cd apps/8_test_ds_pose_estimation/
@@ -36,7 +39,7 @@ Compilation Steps:
   $ ./test_ds_pose_estimation <device>
   ex) $ ./test_ds_pose_estimation /dev/video0
 
-This document shall describe about the sample deepstream application that 
+This document shall describe about the sample deepstream application that
 You can understand how to implement gstreamer pipeline with deepstream SDK.
 
 It is meant for simple demonstration of how to use the various DeepStream SDK

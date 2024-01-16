@@ -20,6 +20,9 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
+#define _BSD_SOURCE
+
+#include <sys/time.h>
 #include <gst/gst.h>
 #include <glib.h>
 #include <stdio.h>
